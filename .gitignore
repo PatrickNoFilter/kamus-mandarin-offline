@@ -1,0 +1,6 @@
+# Signing key — local only, never commit (like bhs-jawa-offline)
+apk/keystore.jks
+# Build intermediates
+apk/tmp/
+# apksigner signature files (regenerable)
+*.idsig

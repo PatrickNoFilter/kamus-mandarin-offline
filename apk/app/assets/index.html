@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Kamus Mandarin Offline — Indonesia-Mandarin (aksara sederhana), pinyin + hanzi. Tanpa internet.">
+<title>Kamus Mandarin Offline</title>
+<style>
+  :root {
+    --bg: #fdf6f3; --card: #ffffff; --ink: #2c2c2c; --muted: #777;
+    --accent: #b71c1c; --accent2: #7f1010; --border: #e5d5d0; --chip: #fbe9e7;
+    --gold: #b8860b; --ok: #2e7d32;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--bg); color: var(--ink); line-height: 1.5;
+  }
+  header {
+    background: linear-gradient(135deg, #7f1010, #b71c1c);
+    color: #fff; padding: 14px 16px 12px;
+    position: sticky; top: 0; z-index: 20;
+    box-shadow: 0 2px 8px rgba(0,0,0,.25);
+  }
+  header h1 { font-size: 20px; letter-spacing: .3px; }
+  header h1 small { font-weight: 400; font-size: 12px; opacity: .85; display: block; }
+  nav.tabs { display: flex; gap: 6px; margin-top: 10px; }
+  nav.tabs button {
+    flex: 1; background: rgba(255,255,255,.16); color: #fff;
+    font-size: 13px; font-weight: 600; padding: 7px 4px; border-radius: 8px;
+    border: 1px solid rgba(255,255,255,.35); font-family: inherit; cursor: pointer;
+  }
+  nav.tabs button.on { background: #fff; color: var(--accent2); }
+  .searchwrap { margin: 12px 16px 0; display: flex; gap: 6px; }
+  .searchwrap input {
+    flex: 1; padding: 11px 14px; font-size: 16px;
+    border: 1px solid var(--border); border-radius: 10px; outline: none;
+    background: #fff; color: #222; min-width: 0;
+  }
+  .searchwrap input:focus { border-color: var(--accent); }
+  .searchwrap button.clr {
+    border: 1px solid var(--border); background: var(--chip); color: #444;
+    border-radius: 10px; padding: 0 14px; font-size: 16px; cursor: pointer;
+  }
+  nav.modes { display: flex; gap: 6px; padding: 10px 16px 0; }
+  nav.modes button {
+    flex: 1; border: 1px solid var(--border); background: #fff; color: #444;
+    padding: 6px 4px; border-radius: 8px; font-size: 12.5px; font-weight: 600;
+    font-family: inherit; cursor: pointer;
+  }
+  nav.modes button.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .hint { padding: 8px 16px 0; font-size: 12.5px; color: var(--muted); }
+  .hint b { color: var(--accent2); }
+  .examples { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 16px 0; }
+  .examples button {
+    border: 1px solid var(--border); background: #fff; color: var(--accent2);
+    border-radius: 999px; font-size: 12.5px; font-weight: 600; cursor: pointer;
+    font-family: inherit; padding: 4px 12px;
+  }
+  .rowbtns { display: flex; gap: 8px; padding: 10px 16px 0; }
+  .rowbtns button {
+    flex: 1; border: 1px solid var(--border); background: #fff; color: var(--accent2);
+    border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer;
+    font-family: inherit; padding: 9px 4px;
+  }
+  .count { padding: 10px 16px 0; font-size: 12.5px; color: var(--muted); }
+  main { padding: 10px 16px 40px; }
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 12px 14px; margin-bottom: 10px;
+  }
+  .card .hanzi {
+    font-size: 30px; line-height: 1.2; font-weight: 700;
+    font-family: "Noto Sans CJK SC", "Noto Serif CJK SC", sans-serif;
+  }
+  .card .hanzi .trad { font-size: 15px; color: var(--muted); font-weight: 400; margin-left: 8px; }
+  .card .pinyin { font-size: 16.5px; margin-top: 2px; }
+  .card .pinyin .t1 { color: #c0392b; } .card .pinyin .t2 { color: #27ae60; }
+  .card .pinyin .t3 { color: #2980b9; } .card .pinyin .t4 { color: #8e44ad; }
+  .card .pinyin .t5 { color: #777; }
+  .card .gloss { font-size: 15px; margin-top: 6px; }
+  .card .gloss mark { background: #ffe082; border-radius: 3px; padding: 0 1px; }
+  .card .meta { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+  .card .meta .hsk {
+    display: inline-block; background: var(--accent); color: #fff;
+    border-radius: 5px; padding: 1px 7px; font-size: 11.5px; font-weight: 700; margin-right: 6px;
+  }
+  .card .actions { display: flex; gap: 8px; margin-top: 10px; }
+  .card .actions button {
+    border: 1px solid var(--border); background: var(--chip); color: #444;
+    border-radius: 8px; font-size: 12.5px; font-weight: 700; cursor: pointer;
+    font-family: inherit; padding: 6px 12px;
+  }
+  .card .actions button.faved { background: #fff3cd; border-color: var(--gold); color: #7a5c00; }
+  .empty { text-align: center; color: var(--muted); padding: 30px 10px; font-size: 14px; }
+  .more {
+    display: block; width: 100%; border: 1px solid var(--border); background: #fff;
+    color: var(--accent2); border-radius: 10px; font-size: 14px; font-weight: 700;
+    cursor: pointer; font-family: inherit; padding: 11px; margin-top: 4px;
+  }
+  section.page { display: none; }
+  section.page.on { display: block; }
+  .about h2 { font-size: 16px; margin: 14px 0 6px; color: var(--accent2); }
+  .about h2:first-child { margin-top: 0; }
+  .about p, .about li { font-size: 14px; margin-bottom: 6px; }
+  .about ul { padding-left: 20px; }
+  .about code { background: #eee; padding: 0 4px; border-radius: 4px; font-size: 13px; }
+  .about .ver { color: var(--muted); font-size: 12.5px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🇨🇳 Kamus Mandarin Offline <small>Indonesia ⇄ Mandarin (aksara sederhana) • pinyin + hanzi • 100% offline</small></h1>
+  <nav class="tabs">
+    <button data-tab="cari" class="on">🔍 Cari</button>
+    <button data-tab="fav">⭐ Favorit <span id="favCount"></span></button>
+    <button data-tab="riwayat">🕘 Riwayat</button>
+    <button data-tab="tentang">ℹ️ Tentang</button>
+  </nav>
+</header>
+
+<section class="page on" id="page-cari">
+  <div class="searchwrap">
+    <input id="q" type="search" placeholder="Ketik Indonesia, hanzi, atau pinyin…  contoh: belajar, xuexi, 学习" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <button class="clr" id="clearBtn" title="Bersihkan">✕</button>
+  </div>
+  <nav class="modes" id="modes">
+    <button data-mode="all" class="on">Semua</button>
+    <button data-mode="id">🇮🇩 Indonesia</button>
+    <button data-mode="hz">🀄 Hanzi</button>
+    <button data-mode="py">🔤 Pinyin</button>
+  </nav>
+  <div class="hint" id="hint">💡 Bisa dicari dengan <b>bahasa Indonesia</b> (<code>belajar</code>), <b>hanzi sederhana</b> (<code>学习</code>), atau <b>pinyin</b> tanpa nada (<code>xuexi</code>), bernada (<code>xuéxí</code>), atau bernomor (<code>xue2xi2</code>).</div>
+  <div class="examples" id="examples"></div>
+  <div class="rowbtns">
+    <button id="randomBtn">🎲 Kata acak</button>
+    <button id="hskBtn">📚 Jelajahi HSK 1</button>
+  </div>
+  <div class="count" id="count"></div>
+  <main id="results"></main>
+</section>
+
+<section class="page" id="page-fav">
+  <main id="favList"></main>
+</section>
+
+<section class="page" id="page-riwayat">
+  <div class="rowbtns"><button id="clearHistBtn">🗑️ Hapus riwayat</button></div>
+  <main id="histList"></main>
+</section>
+
+<section class="page" id="page-tentang">
+  <main class="about" id="aboutBox"></main>
+</section>
+
+<script src="kamus_data.js"></script>
+<script>
+"use strict";
+/* Kamus Mandarin Offline v1.0.0 — UI + pencarian. Data: KAMUS dari kamus_data.js.
+   Baris: [hanzi_sederhana, tradisional ('' bila sama), pinyin_bernada, pinyin_polos, arti_ID, kata_ukur, level_HSK?] */
+
+const $ = (id) => document.getElementById(id);
+const META = (typeof KAMUS_META !== "undefined") ? KAMUS_META : { entries: 0, version: "1.0.0" };
+const DATA = (typeof KAMUS !== "undefined") ? KAMUS : [];
+
+/* Kata gaul -> kata baku (data kamus memakai bahasa formal; "mau" tidak ada, "ingin" ada). */
+const ALIAS = {
+  "mau": "ingin", "nggak": "tidak", "gak": "tidak", "enggak": "tidak",
+  "gue": "saya", "gw": "saya", "lo": "kamu", "lu": "kamu",
+  "makasih": "terima kasih", "udah": "sudah", "banget": "sangat"
+};
+
+const TONE_OF = { "ā": 1, "á": 2, "ǎ": 3, "à": 4, "ē": 1, "é": 2, "ě": 3, "è": 4,
+  "ī": 1, "í": 2, "ǐ": 3, "ì": 4, "ō": 1, "ó": 2, "ǒ": 3, "ò": 4,
+  "ū": 1, "ú": 2, "ǔ": 3, "ù": 4, "ǖ": 1, "ǘ": 2, "ǚ": 3, "ǜ": 4 };
+
+let mode = "all";
+let lastResults = [];
+let shown = 0;
+const PAGE = 60;
+
+/* ---------- util ---------- */
+function esc(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+function normQ(q) {
+  return q.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[0-9]/g, "").replace(/[^a-z\u4e00-\u9fff]/g, "");
+}
+function colorPinyin(py) {
+  return esc(py).replace(/[\p{L}]+/gu, (syl) => {
+    let tone = 5;
+    for (const ch of syl) { if (TONE_OF[ch]) { tone = TONE_OF[ch]; break; } }
+    return '<span class="t' + tone + '">' + syl + "</span>";
+  });
+}
+function highlight(text, q) {
+  if (!q || q.length < 2) return esc(text);
+  const idx = text.toLowerCase().indexOf(q.toLowerCase());
+  if (idx < 0) return esc(text);
+  return esc(text.slice(0, idx)) + "<mark>" + esc(text.slice(idx, idx + q.length)) + "</mark>" + esc(text.slice(idx + q.length));
+}
+
+/* ---------- pencarian (peringkat: hanzi > arti persis > pinyin > awalan > substring;
+   kata HSK didahulukan karena itu kosakata paling umum) ---------- */
+function search(qRaw, limit) {
+  const q = qRaw.toLowerCase().trim();
+  if (!q) return [];
+  const qn = normQ(qRaw);
+  const scored = [];
+  for (let i = 0; i < DATA.length; i++) {
+    const r = DATA[i];
+    const simp = r[0], trad = r[1], py = r[2], plain = r[3], gloss = r[4];
+    const hsk = r[6] || 0;
+    const gl = gloss.toLowerCase();
+    const senses = gl.split(";").map((s) => s.trim());
+    const tokens = gl.split(/[^a-z]+/);
+    let base = 0, cat = "";
+    if (simp === q || trad === q) { base = 1000; cat = "hz"; }
+    else if (senses.indexOf(q) >= 0) { base = 950; cat = "id"; }
+    else if (qn.length >= 2 && plain === qn) { base = 850; cat = "py"; }
+    else if (simp.indexOf(q) === 0 || (trad && trad.indexOf(q) === 0)) { base = 500; cat = "hz"; }
+    else if (gl.indexOf(q) === 0 && (gl.length === q.length || /[^a-z]/.test(gl[q.length]))) { base = 400; cat = "id"; }
+    else if (qn.indexOf(" ") >= 0 && gl.indexOf(q) >= 0) { base = 350; cat = "id"; }
+    else if (qn.length >= 2 && tokens.indexOf(qn) >= 0) { base = 300; cat = "id"; }
+    else if (qn.length >= 2 && plain.indexOf(qn) === 0) { base = 250; cat = "py"; }
+    else if (qn.length >= 2 && tokens.some((w) => w.indexOf(qn) === 0)) { base = 200; cat = "id"; }
+    else if (gl.indexOf(q) >= 0) { base = 100; cat = "id"; }
+    else if (qn.length >= 2 && plain.indexOf(qn) >= 0) { base = 100; cat = "py"; }
+    else if (py.toLowerCase().indexOf(q) >= 0) { base = 100; cat = "py"; }
+    else continue;
+    if (mode !== "all" && cat !== mode) continue;
+    const hskBonus = hsk ? 800 - hsk * 100 : 0;
+    const shortBonus = simp.length === 1 ? 40 : simp.length === 2 ? 20 : 0;
+    scored.push([base + hskBonus + shortBonus, i]);
+  }
+  scored.sort((a, b) => b[0] - a[0] || a[1] - b[1]);
+  return scored.slice(0, limit || 100).map((s) => DATA[s[1]]);
+}
+function searchSmart(qRaw, limit) {
+  const q = qRaw.toLowerCase().trim();
+  const formal = ALIAS[q];
+  let res = search(formal || qRaw, limit);
+  if (formal) {
+    const seen = {};
+    res.forEach((r) => { seen[r[0] + "|" + r[3]] = 1; });
+    search(qRaw, limit).forEach((r) => {
+      if (!seen[r[0] + "|" + r[3]]) res.push(r);
+    });
+  }
+  return res.slice(0, limit || 100);
+}
+
+/* ---------- favorit & riwayat (localStorage) ---------- */
+function storeGet(key) {
+  try { return JSON.parse(localStorage.getItem(key) || "[]"); } catch (e) { return []; }
+}
+function storeSet(key, v) {
+  try { localStorage.setItem(key, JSON.stringify(v)); } catch (e) { /* abaikan */ }
+}
+function entryKey(r) { return r[0] + "|" + r[3]; }
+function findByKey(key) {
+  const parts = key.split("|");
+  for (let i = 0; i < DATA.length; i++) {
+    if (DATA[i][0] === parts[0] && DATA[i][3] === parts[1]) return DATA[i];
+  }
+  return null;
+}
+function isFav(r) { return storeGet("km_fav").indexOf(entryKey(r)) >= 0; }
+function toggleFav(r) {
+  const favs = storeGet("km_fav");
+  const k = entryKey(r);
+  const idx = favs.indexOf(k);
+  if (idx >= 0) favs.splice(idx, 1); else favs.unshift(k);
+  storeSet("km_fav", favs);
+  renderFavCount();
+}
+function addHist(r) {
+  const h = storeGet("km_hist");
+  const k = entryKey(r);
+  const idx = h.indexOf(k);
+  if (idx >= 0) h.splice(idx, 1);
+  h.unshift(k);
+  storeSet("km_hist", h.slice(0, 50));
+}
+
+/* ---------- render ---------- */
+function cardHTML(r, q) {
+  const fav = isFav(r);
+  const trad = r[1] ? '<span class="trad">繁 ' + esc(r[1]) + "</span>" : "";
+  const hsk = r[6] ? '<span class="hsk">HSK ' + r[6] + "</span>" : "";
+  const cl = r[5] ? '<div class="meta">Kata ukur: ' + esc(r[5]) + "</div>" : "";
+  return '<article class="card" data-key="' + esc(entryKey(r)) + '">' +
+    '<div class="hanzi">' + esc(r[0]) + trad + "</div>" +
+    '<div class="pinyin">' + colorPinyin(r[2]) + "</div>" +
+    '<div class="gloss">' + highlight(r[4], q) + "</div>" +
+    '<div class="meta">' + hsk + '<span>' + META.entries.toLocaleString("id-ID") + " entri • offline</span></div>" +
+    cl +
+    '<div class="actions">' +
+    '<button data-act="fav" class="' + (fav ? "faved" : "") + '">' + (fav ? "★ Favorit" : "☆ Favorit") + "</button>" +
+    '<button data-act="copy">📋 Salin</button>' +
+    "</div></article>";
+}
+function renderResults() {
+  const box = $("results");
+  const total = lastResults.length;
+  $("count").textContent = total
+    ? total.toLocaleString("id-ID") + " hasil" + (total >= 100 ? " (100 teratas — persempit pencarian untuk hasil lebih tepat)" : "")
+    : "";
+  const q = $("q").value.trim();
+  let html = "";
+  const end = Math.min(shown, total);
+  for (let i = 0; i < end; i++) html += cardHTML(lastResults[i], q);
+  if (total > shown) html += '<button class="more" id="moreBtn">Muat ' + Math.min(PAGE, total - shown) + " lagi</button>";
+  if (!total && q) html = '<div class="empty">Tidak ditemukan untuk “' + esc(q) + '”.<br>Coba kata lain, atau periksa ejaan pinyin (tanpa nada juga bisa: <b>xuexi</b>).</div>';
+  if (!total && !q) html = '<div class="empty">Ketik kata Indonesia, hanzi, atau pinyin di atas.<br>Atau tekan 🎲 Kata acak untuk belajar satu kata baru.</div>';
+  box.innerHTML = html;
+  const more = $("moreBtn");
+  if (more) more.onclick = () => { shown += PAGE; renderResults(); };
+}
+function renderFavCount() {
+  $("favCount").textContent = storeGet("km_fav").length ? "(" + storeGet("km_fav").length + ")" : "";
+}
+function renderList(boxId, keys, emptyText) {
+  const box = $(boxId);
+  if (!keys.length) { box.innerHTML = '<div class="empty">' + emptyText + "</div>"; return; }
+  let html = "";
+  keys.forEach((k) => { const r = findByKey(k); if (r) html += cardHTML(r, ""); });
+  box.innerHTML = html || '<div class="empty">' + emptyText + "</div>";
+}
+function renderFav() { renderList("favList", storeGet("km_fav"), "Belum ada favorit.<br>Ketuk ☆ Favorit pada kata yang ingin disimpan."); }
+function renderHist() { renderList("histList", storeGet("km_hist"), "Belum ada riwayat.<br>Kata yang kamu buka akan muncul di sini."); }
+
+/* ---------- aksi ---------- */
+function doSearch() {
+  const q = $("q").value.trim();
+  if (!q) { lastResults = []; shown = 0; renderResults(); return; }
+  const isHanzi = /[\u4e00-\u9fff]/.test(q);
+  if (!isHanzi && normQ(q).length < 2 && !ALIAS[q.toLowerCase()]) { lastResults = []; shown = 0; renderResults(); return; }
+  lastResults = searchSmart(q, 100);
+  shown = PAGE;
+  renderResults();
+}
+let debounce = null;
+$("q").addEventListener("input", () => {
+  clearTimeout(debounce);
+  debounce = setTimeout(doSearch, 180);
+});
+$("clearBtn").onclick = () => { $("q").value = ""; doSearch(); $("q").focus(); };
+$("modes").addEventListener("click", (e) => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  mode = b.dataset.mode;
+  document.querySelectorAll("#modes button").forEach((x) => x.classList.toggle("on", x === b));
+  doSearch();
+});
+$("randomBtn").onclick = () => {
+  const r = DATA[Math.floor(Math.random() * DATA.length)];
+  lastResults = [r]; shown = 1;
+  $("q").value = "";
+  renderResults();
+  addHist(r);
+  window.scrollTo(0, 0);
+};
+$("hskBtn").onclick = () => {
+  const hsk1 = [];
+  for (let i = 0; i < DATA.length && hsk1.length < 100; i++) {
+    if (DATA[i][6] === 1) hsk1.push(DATA[i]);
+  }
+  lastResults = hsk1; shown = PAGE;
+  $("q").value = "";
+  $("count").textContent = "Kosakata HSK 1 (100 pertama dari daftar — ketik kata untuk mencari yang lain)";
+  renderResults();
+  window.scrollTo(0, 0);
+};
+$("clearHistBtn").onclick = () => { storeSet("km_hist", []); renderHist(); };
+
+/* delegasi klik kartu: favorit / salin / riwayat */
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest("button[data-act]");
+  const card = e.target.closest(".card");
+  if (!card) return;
+  const r = findByKey(card.dataset.key);
+  if (!r) return;
+  if (btn && btn.dataset.act === "fav") {
+    toggleFav(r);
+    btn.classList.toggle("faved", isFav(r));
+    btn.textContent = isFav(r) ? "★ Favorit" : "☆ Favorit";
+    if ($("page-fav").classList.contains("on")) renderFav();
+  } else if (btn && btn.dataset.act === "copy") {
+    const text = r[0] + " " + r[2] + " — " + r[4];
+    const done = () => { btn.textContent = "✓ Disalin"; setTimeout(() => { btn.textContent = "📋 Salin"; }, 1200); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, () => fallbackCopy(text, done));
+    } else fallbackCopy(text, done);
+  } else if (!btn) {
+    addHist(r);
+  }
+});
+function fallbackCopy(text, done) {
+  const ta = document.createElement("textarea");
+  ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand("copy"); done(); } catch (err) { /* abaikan */ }
+  document.body.removeChild(ta);
+}
+
+/* tab */
+document.querySelectorAll("nav.tabs button").forEach((b) => {
+  b.onclick = () => {
+    document.querySelectorAll("nav.tabs button").forEach((x) => x.classList.toggle("on", x === b));
+    document.querySelectorAll("section.page").forEach((p) => p.classList.remove("on"));
+    $("page-" + b.dataset.tab).classList.add("on");
+    if (b.dataset.tab === "fav") renderFav();
+    if (b.dataset.tab === "riwayat") renderHist();
+    if (b.dataset.tab === "tentang") renderAbout();
+    window.scrollTo(0, 0);
+  };
+});
+
+/* contoh cepat */
+["belajar", "terima kasih", "你好", "xuexi", "air", "teman", "makan", "wǒ"].forEach((w) => {
+  const b = document.createElement("button");
+  b.textContent = w;
+  b.onclick = () => { $("q").value = w; doSearch(); $("q").focus(); };
+  $("examples").appendChild(b);
+});
+
+/* tentang */
+function renderAbout() {
+  $("aboutBox").innerHTML =
+    '<h2>Kamus Mandarin Offline v' + esc(META.version || "1.0.0") + '</h2>' +
+    '<p class="ver">' + (META.entries || DATA.length).toLocaleString("id-ID") + ' entri • hanzi sederhana (简体) + tradisional • pinyin bernada • arti Indonesia • 100% offline, tanpa iklan, tanpa akun.</p>' +
+    '<h2>Cara mencari</h2><ul>' +
+    "<li><b>Indonesia:</b> <code>belajar</code>, <code>terima kasih</code>, <code>air</code></li>" +
+    "<li><b>Hanzi:</b> <code>学习</code>, <code>谢谢</code>, <code>中国</code></li>" +
+    "<li><b>Pinyin:</b> <code>xuexi</code> (tanpa nada), <code>xuéxí</code> (bernada), <code>xue2xi2</code> (bernomor)</li>" +
+    "<li><b>Kata gaul</b> ikut dicarikan kata bakunya: <code>mau</code> → ingin, <code>nggak</code> → tidak, <code>gue</code> → saya, <code>makasih</code> → terima kasih.</li>" +
+    "<li>Warna pinyin = nada: <span style='color:#c0392b'>nada 1</span>, <span style='color:#27ae60'>nada 2</span>, <span style='color:#2980b9'>nada 3</span>, <span style='color:#8e44ad'>nada 4</span>, netral abu-abu. Badge <b>HSK 1–6</b> = kosakata ujian HSK (paling umum).</li></ul>" +
+    "<h2>Sumber data &amp; lisensi</h2><p>Data kamus: <b>CC-CPLUSDICT (Indonesia)</b> — turunan CC-CEDICT, lisensi <b>CC BY-SA 4.0</b>. Penanda level HSK dari daftar kosakata HSK 3.0 (drkameleon/complete-hsk-vocabulary).</p>" +
+    "<p><b>Jujur soal kualitas:</b> arti Indonesia adalah <b>terjemahan mesin</b> dari definisi Inggris CC-CEDICT — bukan dibaca manusia satu per satu. Sebagian kecil entri masih mengandung bahasa Inggris, dan beberapa arti bisa kurang pas. Jangan pakai kamus ini sendirian untuk urusan hukum/medis. Laporan koreksi: CC-CEDICT editor (untuk arti Inggris) — perbaikan di sana masuk ke rilis berikutnya.</p>" +
+    "<p>Atribusi: CEDICT © 1997, 1998 Paul Andrew Denisowski; CC-CEDICT (komunitas); CC-CPLUSDICT (R8VEN LLC).</p>";
+}
+
+/* init */
+renderFavCount();
+renderResults();
+renderAbout();
+</script>
+</body>
+</html>
